@@ -16,6 +16,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && pip install poetry
 
+RUN apt-get update \
+    && apt-get -y install libpq-dev gcc \
+    && pip install psycopg2
+
 # Define o diretório de trabalho para a aplicação
 WORKDIR /app
 

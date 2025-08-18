@@ -27,7 +27,7 @@ WORKDIR /app
 COPY poetry.lock pyproject.toml ./
 
 # Instala as dependências
-RUN poetry install --no-root --only main
+RUN poetry install --no-root --with dev
 
 # Copia o resto do código da aplicação
 COPY . .

@@ -1,22 +1,22 @@
-[project]
+# pyproject.toml
+
+[tool.poetry]
 name = "bookstore"
 version = "0.1.0"
 description = "Bookstore API"
-authors = [
-    {name = "Joao Victor Angelo",email = "146788838+JoaoVictorAngelo@users.noreply.github.com"}
-]
+authors = ["Joao Victor Angelo <146788838+JoaoVictorAngelo@users.noreply.github.com>"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "django (>=5.2.4,<6.0.0)",
-    "djangorestframework (>=3.16.0,<4.0.0)",
-    "django-extensions (>=4.1,<5.0)",
-    "django-debug-toolbar (>=6.0.0,<7.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)",
-    "flake8 (>=7.3.0,<8.0.0)"
-]
+# A linha 'requires-python' foi removida daqui.
 
-[tool.poetry]
+[tool.poetry.dependencies]
+python = ">=3.12" # Esta é a linha correta para definir a versão do Python.
+django = ">=5.2.4,<6.0.0"
+djangorestframework = ">=3.16.0,<4.0.0"
+django-extensions = ">=4.1,<5.0"
+django-debug-toolbar = ">=6.0.0,<7.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
+flake8 = ">=7.3.0,<8.0.0"
+django-environ = "^0.11.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
@@ -24,7 +24,7 @@ factory-boy = "^3.3.3"
 pytest-django = "^4.11.1"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]

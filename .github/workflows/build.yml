@@ -1,0 +1,62 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # --- INÍCIO DA ALTERAÇÃO ---
+      - name: Check out the repository
+        uses: actions/checkout@v4 # Versão mais recente
+        with:
+          ref: ${{ github.head_ref }} # Força o checkout da branch do PR
+      # --- FIM DA ALTERAÇÃO ---
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      # --- INÍCIO DA ALTERAÇÃO ---
+      - name: Clear Poetry cache
+        run: poetry cache clear . --all -n
+      # --- FIM DA ALTERAÇÃO ---
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: psql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: 'uma-chave-secreta-para-testes'
+          DEBUG: 'False'
+        run: poetry run python manage.py test

@@ -14,18 +14,15 @@ jobs:
       matrix:
         python-version: [3.8, 3.9]
 
-    # Adiciona um serviço de banco de dados PostgreSQL para este job
     services:
       postgres:
-        image: postgres:15 # Versão do PostgreSQL
-        # Variáveis de ambiente para o contêiner do Postgres criar o banco e o usuário
+        image: postgres:15
         env:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_db
         ports:
           - 5432:5432
-        # Garante que o banco esteja pronto antes de iniciar os testes
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -33,10 +30,15 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3 # Use versões mais recentes das actions
+      # --- INÍCIO DA ALTERAÇÃO ---
+      - name: Check out the repository
+        uses: actions/checkout@v4 # Versão mais recente
+        with:
+          ref: ${{ github.head_ref }} # Força o checkout da branch do PR
+      # --- FIM DA ALTERAÇÃO ---
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4 # Use versões mais recentes das actions
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -44,16 +46,17 @@ jobs:
         run: |
           pip install poetry
 
+      # --- INÍCIO DA ALTERAÇÃO ---
+      - name: Clear Poetry cache
+        run: poetry cache clear . --all -n
+      # --- FIM DA ALTERAÇÃO ---
+
       - name: Install dependencies
         run: poetry install
 
       - name: Run Tests
-        # Define as variáveis de ambiente para o passo de teste
-        # para que o Django se conecte ao banco de dados do serviço
         env:
-          # Use as mesmas credenciais definidas no serviço postgres
           DATABASE_URL: psql://test_user:test_password@localhost:5432/test_db
           SECRET_KEY: 'uma-chave-secreta-para-testes'
           DEBUG: 'False'
         run: poetry run python manage.py test
-

@@ -1,37 +1,58 @@
-name: Python application
+name: Django CI
 
-on: [push]
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
 
 jobs:
   build:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.8, 3.9] # Você pode manter apenas uma, ex: [3.9]
 
-    runs-on: ubuntu-latest
+    # Adiciona um serviço de banco de dados PostgreSQL para este job
+    services:
+      postgres:
+        image: postgres:15 # Versão do PostgreSQL
+        # Variáveis de ambiente para o contêiner do Postgres criar o banco e o usuário
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        # Garante que o banco esteja pronto antes de iniciar os testes
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3 # Use versões mais recentes das actions
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4 # Use versões mais recentes das actions
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install poetry ${{ matrix.poetry-version }}
+      - name: Install Poetry
         run: |
-          python -m ensurepip
-          python -m pip install --upgrade pip
-          python -m pip install poetry
-
-      - name: View poetry --help
-        run: poetry --help
+          pip install poetry
 
       - name: Install dependencies
-        shell: bash
-        run: python -m poetry install
+        run: poetry install
 
-      - name: Test
-        run: |
-          poetry run python manage.py test
+      - name: Run Tests
+        # Define as variáveis de ambiente para o passo de teste
+        # para que o Django se conecte ao banco de dados do serviço
+        env:
+          # Use as mesmas credenciais definidas no serviço postgres
+          DATABASE_URL: psql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: 'uma-chave-secreta-para-testes'
+          DEBUG: 'False'
+        run: poetry run python manage.py test

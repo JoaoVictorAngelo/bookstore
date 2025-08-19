@@ -1,0 +1,98 @@
+# .github/workflows/workflow-pr.yml
+
+name: Django PR Checks
+
+# Este workflow roda em cada pull request para as branches main e develop
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  # --- JOB 1: RODAR OS TESTES DO DJANGO ---
+  test:
+    name: Run Django Tests
+    runs-on: ubuntu-latest
+
+    # Usamos a mesma matriz que já sabemos que funciona
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
+    # Serviço de banco de dados, exatamente como no outro workflow
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Usamos checkout@v4 e github.head_ref para garantir o código mais recente
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      # Configura a versão correta do Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Instala o Poetry de forma limpa
+      - name: Install Poetry
+        run: pip install poetry
+
+      # Instala as dependências do projeto
+      - name: Install dependencies
+        run: poetry install
+
+      # Roda os testes com as credenciais corretas
+      - name: Run tests
+        env:
+          DATABASE_URL: psql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: 'uma-chave-secreta-para-testes'
+          DEBUG: 'False'
+        run: poetry run python manage.py test
+
+  # --- JOB 2: VERIFICAR A QUALIDADE DO CÓDIGO (LINTING) ---
+  lint:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    # Este job depende do sucesso do job de teste
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      # Roda o linter que você escolheu
+      - name: Wemake Python Styleguide
+        uses: wemake-services/wemake-python-styleguide@0.17.0 # Versão mais recente
+        continue-on-error: true # Permite que o PR seja mergeado mesmo com avisos
+        with:
+          reporter: 'github-pr-review' # Comenta diretamente no PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

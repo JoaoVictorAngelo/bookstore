@@ -12,7 +12,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9]
+        # --- INÍCIO DA ALTERAÇÃO ---
+        # Alterado para testar apenas na versão do Python definida no projeto.
+        python-version: ['3.12']
+        # --- FIM DA ALTERAÇÃO ---
 
     services:
       postgres:
@@ -30,12 +33,10 @@ jobs:
           --health-retries 5
 
     steps:
-      # --- INÍCIO DA ALTERAÇÃO ---
       - name: Check out the repository
-        uses: actions/checkout@v4 # Versão mais recente
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }} # Força o checkout da branch do PR
-      # --- FIM DA ALTERAÇÃO ---
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -46,10 +47,8 @@ jobs:
         run: |
           pip install poetry
 
-      # --- INÍCIO DA ALTERAÇÃO ---
       - name: Clear Poetry cache
         run: poetry cache clear . --all -n
-      # --- FIM DA ALTERAÇÃO ---
 
       - name: Install dependencies
         run: poetry install

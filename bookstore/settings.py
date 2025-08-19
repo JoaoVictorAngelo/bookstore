@@ -25,7 +25,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
 # 'DJANGO_ALLOWED_HOSTS' deve ser uma string de hosts separados por espaço no seu .env.dev
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'joaovictorangelo.pythonanywhere.com/'])
 
 
 # Application definition

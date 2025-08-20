@@ -79,9 +79,30 @@ WSGI_APPLICATION = "bookstore.wsgi.application"
 # Esta é a correção principal.
 # O env.db() lê a variável DATABASE_URL (que existe no GitHub Actions)
 # Se não encontrar, ele usa um banco sqlite local como padrão.
-DATABASES = {
-    'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}')
-}
+if env('DB_NAME', default=None):
+    # Se ela existe, estamos no PythonAnywhere (ou em outro ambiente de produção).
+    # Usamos a configuração para o MySQL.
+    print(">>> Usando configuração de banco de dados de PRODUÇÃO (MySQL).")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
+            'HOST': env('DB_HOST'),
+            'PORT': '3306',
+        }
+    }
+else:
+    # Se a variável NÃO existe, estamos no seu computador local.
+    # Usamos a configuração padrão com SQLite.
+    print(">>> Usando configuração de banco de dados de DESENVOLVIMENTO (SQLite).")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # --- FIM DA CONFIGURAÇÃO DO BANCO DE DADOS COM ENVIRON ---
 
 

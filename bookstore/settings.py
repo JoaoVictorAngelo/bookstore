@@ -16,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Leia o arquivo .env.dev (importante para o seu desenvolvimento local)
 # O environ é inteligente e não vai dar erro se o arquivo não existir (como no GitHub Actions)
-environ.Env.read_env(os.path.join(BASE_DIR, '.env.dev'))
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # --- FIM DA CONFIGURAÇÃO DO ENVIRON ---
 
 
